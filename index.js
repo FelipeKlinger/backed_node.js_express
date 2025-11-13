@@ -1,6 +1,11 @@
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
+const cors = require("cors"); // importar el paquete cors para permitir el acceso desde cualquier origen
+app.use(express.static("dist")); // middleware para servir archivos estaticos desde la carpeta build
+
+app.use(cors()); // middleware para permitir el acceso desde cualquier origen
+app.use(express.json()); // middleware para parsear el body de las peticiones
 
 let persons = [
   {
@@ -25,30 +30,30 @@ let persons = [
   },
 ];
 
+app.use(
+  morgan(function (tokens, req, res) {
+    // este tipo de funcion se llama en JS un callback
 
-app.use(morgan(function (tokens, req, res) { // este tipo de funcion se llama en JS un callback
+    morgan.token("body", (req) => JSON.stringify(req.body)); // token personalizado para mostrar el body de la peticion
 
-  morgan.token('body', (req) => JSON.stringify(req.body)); // token personalizado para mostrar el body de la peticion
-
-  return [
-    tokens.method(req, res),      // Método HTTP
-    tokens.url(req, res),         // URL solicitada
-    tokens.status(req, res),      // Código de estado
-    tokens.res(req, res, 'content-length'), '-', // Tamaño de la respuesta
-    tokens['response-time'](req, res), 'ms',
-    tokens.body(req, res)         // Cuerpo de la petición
-  ].join(' ');
-}));
-
-
-app.use(express.json()) // middleware para parsear el body de las peticiones
+    return [
+      tokens.method(req, res), // Método HTTP
+      tokens.url(req, res), // URL solicitada
+      tokens.status(req, res), // Código de estado
+      tokens.res(req, res, "content-length"),
+      "-", // Tamaño de la respuesta
+      tokens["response-time"](req, res),
+      "ms",
+      tokens.body(req, res), // Cuerpo de la petición
+    ].join(" ");
+  })
+);
 
 app.get("/", (request, response) => {
   response.send(`<h1>Prueba de servidor NODE en el puerto ${PORT}!</h1>`);
 });
 
 app.get("/api/persons", (request, response) => {
-  console.log(request.body);
   response.json(persons);
 });
 
@@ -98,7 +103,11 @@ app.post("/api/persons", (request, response) => {
     return response.status(400).json({
       error: "El nombre y el numero son obligatorios",
     });
-  } else if (persons.find((p) => p.name.toLocaleLowerCase() === body.name.toLocaleLowerCase())) {
+  } else if (
+    persons.find(
+      (p) => p.name.toLocaleLowerCase() === body.name.toLocaleLowerCase()
+    )
+  ) {
     return response.status(400).json({
       error: "El nombre debe ser unico",
     });
@@ -114,12 +123,12 @@ app.post("/api/persons", (request, response) => {
 });
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' })
-}
+  response.status(404).send({ error: "unknown endpoint" });
+};
 
-app.use(unknownEndpoint) // middleware para manejar endpoints desconocidos
+app.use(unknownEndpoint); // middleware para manejar endpoints desconocidos
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
