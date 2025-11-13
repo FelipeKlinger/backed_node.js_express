@@ -128,7 +128,7 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint); // middleware para manejar endpoints desconocidos
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001; // process.env.PORT significa que si hay una variable de entorno PORT la use, si no use el puerto 3001
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
