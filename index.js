@@ -2,8 +2,8 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cors = require("cors"); // importar el paquete cors para permitir el acceso desde cualquier origen
+const Person = require("./models/person"); // importar el modelo Person
 app.use(express.static("dist")); // middleware para servir archivos estaticos desde la carpeta build
-
 app.use(cors()); // middleware para permitir el acceso desde cualquier origen
 app.use(express.json()); // middleware para parsear el body de las peticiones
 
@@ -54,7 +54,9 @@ app.get("/", (request, response) => {
 });
 
 app.get("/api/persons", (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons); // envia la respuesta en formato json
+  });
 });
 
 app.get("/info", (request, response) => {
@@ -65,17 +67,13 @@ app.get("/info", (request, response) => {
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  // dos parametros que son el endpoint y el id
-  const id = Number(request.params.id);
-  const person = persons.find((p) => p.id === id); // buscar en el array persons el id que coincida con el id del parametro
-
-  if (!person) {
-    // si no hay respuesta
-    console.log(`No existe el id ${id}`);
-    response.status(404).end(); // se envia un estado 404
-  } else {
-    response.json(persons.find((person) => person.id === id));
-  }
+  Person.findById(request.params.id).then((person) => {
+    if (person) { // si encuentra la persona
+      response.json(person);
+    } else {
+      response.status(404).json({ error: "Person not found" }).end();
+    }
+  });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
@@ -92,10 +90,7 @@ app.delete("/api/persons/:id", (request, response) => {
   }
 });
 
-const idRamdon = () => Math.floor(Math.random() * 10000);
-
 app.post("/api/persons", (request, response) => {
-  const id = idRamdon();
   const body = request.body;
 
   if (!body.name || !body.number) {
@@ -112,14 +107,14 @@ app.post("/api/persons", (request, response) => {
       error: "El nombre debe ser unico",
     });
   }
-  const objectPerson = {
-    id: id,
+  const objectPerson = new Person({
     name: body.name,
     number: body.number,
-  };
+  });
 
-  persons = persons.concat(objectPerson);
-  response.json(objectPerson); // esta linea envia la respuesta al servidor diciendole que se ha creado el nuevo objeto
+  objectPerson.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
 const unknownEndpoint = (request, response) => {
