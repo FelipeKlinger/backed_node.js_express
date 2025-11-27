@@ -26,19 +26,20 @@ const personSchema = new mongoose.Schema({
     type: String,
     minlength: 9,
     validate: {
-      validator : function(v) {
-        return /^\d{2,3}-\d{5,}$/.test(v); // formato 2 o 3 dígitos, guion, y 5 o más dígitos después
-      }},
+      validator: function (v) {
+        return /^\d{2,3}-\d{5,}$/.test(v);
+      },
+    },
     required: true,
-  }
+  },
 });
 
 personSchema.set("toJSON", {
-    transform: (document, returnedObject) => { 
+  transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString();
     delete returnedObject._id;
     delete returnedObject.__v;
-    },
-})
+  },
+});
 
 module.exports = mongoose.model("Person", personSchema);

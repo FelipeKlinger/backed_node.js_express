@@ -38,9 +38,7 @@ app.get("/api/persons", (request, response) => {
 
 app.get("/info", (request, response) => {
   console.log(request.getMaxListeners.length);
-  response.send(
-    `<p>Phonebook has info for ${persons.length} people</p><p>${new Date()}</p>`
-  );
+  response.send(`<p>Phonebook has info for  people</p><p>${new Date()}</p>`);
 });
 
 app.get("/api/persons/:id", (request, response) => {
@@ -54,42 +52,48 @@ app.get("/api/persons/:id", (request, response) => {
   });
 });
 
-app.delete("/api/persons/:id", (request, response) => {
+app.delete("/api/persons/:id", (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
-    .then((result) => {
+    .then(() => {
       response.status(204).end();
     })
-    .catch((error) => nex(error)); // Si hay algun error, lo pasamos al siguiente middleware (error handler)
+    .catch((error) => next(error)); // Si hay algun error, lo pasamos al siguiente middleware (error handler)
 });
 
 app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
-  if (!body.name || !body.number) { // si no hay contenido en el body
+  if (!body.name || !body.number) {
+    // si no hay contenido en el body
     return response.status(400).json({
       error: "El nombre y el numero son obligatorios",
     });
-  } 
+  }
 
   const objectPerson = new Person({
     name: body.name,
     number: body.number,
   });
 
-  objectPerson.save().then((savedPerson) => {
-    response.json(savedPerson);
-  }) .catch(error => next(error));
+  objectPerson
+    .save()
+    .then((savedPerson) => {
+      response.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
 
 app.put("/api/persons/:id", (request, response, next) => {
-  
   const body = request.body; // obtener el body de la peticion
   const person = {
     name: body.name,
     number: body.number,
   };
 
-  Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true })
+  Person.findByIdAndUpdate(request.params.id, person, {
+    new: true,
+    runValidators: true,
+  })
     .then((updatedPerson) => {
       response.json(updatedPerson);
     })

@@ -21,7 +21,7 @@ const PersonSchema = new mongoose.Schema({
 
 const Persons = mongoose.model("Person", PersonSchema);
 
-if (process.argv.length == 3) {
+if (process.argv.length === 3) {
   console.log("Phonebook:");
   Persons.find({}).then((result) => {
     result.forEach((person) => {
@@ -31,13 +31,13 @@ if (process.argv.length == 3) {
   });
 }
 
-if (process.argv.length == 5) {
+if (process.argv.length === 5) {
   const person = new Persons({
     name: name,
     number: number,
   });
 
-  person.save().then((result) => {
+  person.save().then(() => {
     console.log(`Persona creada: `, ` ${name} / ${number}`);
     mongoose.connection.close();
   });
